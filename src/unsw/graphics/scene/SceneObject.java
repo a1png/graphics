@@ -271,7 +271,6 @@ public class SceneObject {
         // TODO: Compute the coordinate frame for this object
         // draw the object (Call drawSelf() to draw the object itself) 
         // and all its children recursively
-       
         
     }
 
@@ -282,7 +281,15 @@ public class SceneObject {
      */
     public Point2D getGlobalPosition() {
         // TODO: Complete this
-        return null;
+        Point2D globalPos, initPos;
+
+        if (myParent != null) {
+            initPos = myParent.getGlobalPosition();
+        } else {
+            initPos = new Point2D(0, 0);
+        }
+        globalPos = initPos.translate(myTranslation.getX(), myTranslation.getY());
+        return globalPos;
     }
 
     /**
@@ -293,7 +300,17 @@ public class SceneObject {
      */
     public float getGlobalRotation() {
         // TODO: Complete this
-        return 0;
+        float initRot, globalRot;
+        if (myParent != null) {
+            initRot = myParent.getGlobalRotation();
+        } else {
+            initRot = 0;
+        }
+        globalRot = initRot + myRotation;
+        int n = (int) ((globalRot / 180) / Math.abs(globalRot / 180));
+        globalRot = - (n * 180 - n * (globalRot % 180));
+        // problematic
+        return globalRot;
     }
 
     /**
@@ -303,7 +320,14 @@ public class SceneObject {
      */
     public float getGlobalScale() {
         // TODO: Complete this
-        return 1;
+        float initScale, globalScale;
+        if (myParent != null) {
+            initScale = myParent.getGlobalScale();
+        } else {
+            initScale = 1;
+        }
+        globalScale = initScale * myScale;
+        return globalScale;
     }
 
     /**
