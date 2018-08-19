@@ -22,7 +22,7 @@ import unsw.graphics.Shader;
  *
  */
 public class Polygon2D {
-    private List<Point2D> points;
+    public List<Point2D> points;
 
     public Polygon2D(List<Point2D> points) {
         this.points = new ArrayList<Point2D>(points);
@@ -72,6 +72,10 @@ public class Polygon2D {
     public void drawOutline(GL3 gl, CoordFrame2D frame) {
         // TODO: You need to write this method.
         // It should draw an outline of a polygon using GL_LINE_LOOP
+        List<Point2D> outlinePoints = new ArrayList<>(this.points);
+        outlinePoints.add(outlinePoints.get(0));
+        LineStrip2D outline = new LineStrip2D(outlinePoints);
+        outline.draw(gl, frame);
     }
     
     /**

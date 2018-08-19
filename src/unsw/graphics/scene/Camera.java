@@ -2,7 +2,9 @@ package unsw.graphics.scene;
 
 import com.jogamp.opengl.GL3;
 
+import unsw.graphics.CoordFrame2D;
 import unsw.graphics.Matrix3;
+import unsw.graphics.Shader;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 
@@ -33,6 +35,13 @@ public class Camera extends SceneObject {
         // rotation and scale
         
         // TODO set the view matrix to the computed transform
+        CoordFrame2D view = CoordFrame2D.identity()
+            .scale(1/myAspectRatio, 1)
+            .scale(1/getScale(), 1/getScale())
+            .rotate(-getRotation())
+            .translate(-getPosition().getX(), -getPosition().getY());
+        Shader.setViewMatrix(gl, view.getMatrix());
+
     }
 
     public void reshape(int width, int height) {
