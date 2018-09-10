@@ -42,6 +42,11 @@ public class Shader {
      * The vertex normal attribute for use with glAttribPointer.
      */
     public static final int NORMAL = 1;
+    
+    /**
+     * The vertex texture coordinate attribute for use with glAttribPointer.
+     */
+    public static final int TEX_COORD = 2;
 
     private int id;
 
@@ -75,12 +80,15 @@ public class Shader {
         
         gl.glBindAttribLocation(id, POSITION, "position");
         gl.glBindAttribLocation(id, NORMAL, "normal");
+        gl.glBindAttribLocation(id, TEX_COORD, "texCoord");
         
         shaderProgram.link(gl, System.err);
         
         gl.glEnableVertexAttribArray(POSITION);
         if (gl.glGetAttribLocation(id, "normal") != -1)
             gl.glEnableVertexAttribArray(NORMAL);
+        if (gl.glGetAttribLocation(id, "texCoord") != -1)
+            gl.glEnableVertexAttribArray(TEX_COORD);
         
     }
 
@@ -187,7 +195,7 @@ public class Shader {
      * @param color
      */
     public static void setPenColor(GL3 gl, Color color) {
-        setColor(gl, "input_color", color);
+        setColorWithAlpha(gl, "input_color", color);
     }
     
     /**
@@ -220,6 +228,21 @@ public class Shader {
     }
     
     /**
+     * Set an arbitrary uniform variable of type 'vec4' with the given
+     * Color.
+     * @param gl
+     * @param var
+     * @param color
+     */
+    public static void setColorWithAlpha(GL3 gl, String var, Color color) {
+        int ids[] = new int[1];
+        gl.glGetIntegerv(GL3.GL_CURRENT_PROGRAM, ids, 0);
+        int loc = gl.glGetUniformLocation(ids[0], var);
+        gl.glUniform4f(loc, color.getRed() / 255f, color.getGreen() / 255f,
+                color.getBlue() / 255f, color.getAlpha() / 255f);
+    }
+    
+    /**
      * Set an arbitrary uniform variable of type 'float' with the given
      * float.
      * @param gl
@@ -231,5 +254,12 @@ public class Shader {
         gl.glGetIntegerv(GL3.GL_CURRENT_PROGRAM, ids, 0);
         int loc = gl.glGetUniformLocation(ids[0], var);
         gl.glUniform1f(loc, f);
+    }
+
+    public static void setInt(GL3 gl, String var, int i) {
+        int ids[] = new int[1];
+        gl.glGetIntegerv(GL3.GL_CURRENT_PROGRAM, ids, 0);
+        int loc = gl.glGetUniformLocation(ids[0], var);
+        gl.glUniform1i(loc, i);
     }
 }

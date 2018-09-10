@@ -1,7 +1,6 @@
 package unsw.graphics.examples;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 
@@ -12,28 +11,33 @@ import com.jogamp.opengl.util.GLBuffers;
 import unsw.graphics.Application3D;
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
+import unsw.graphics.Point2DBuffer;
 import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
+import unsw.graphics.Texture;
+import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
-import unsw.graphics.geometry.TriangleMesh;
 
 /**
- * A simple example that draws a cube using indexing.
+ * A simple example that draws a textured cube using indexing.
  * 
  * @author Robert Clifton-Everest
  *
  */
-public class IndexedCube extends Application3D {
+public class TexturedCube extends Application3D {
 
     private float rotationY;
     private Point3DBuffer vertexBuffer;
+    private Point2DBuffer texCoordBuffer;
     private IntBuffer indicesBuffer;
     private int verticesName;
+    private int texCoordsName;
     private int indicesName;
-    private TriangleMesh cube;
+    
+    private Texture texture;
 
-    public IndexedCube() {
-        super("Cube", 600, 600);
+    public TexturedCube() {
+        super("Texture Cube", 600, 600);
         rotationY = 0;
     }
 
@@ -44,20 +48,25 @@ public class IndexedCube extends Application3D {
     }
 
     public static void main(String[] args) {
-        IndexedCube example = new IndexedCube();
+        TexturedCube example = new TexturedCube();
         example.start();
     }
 
     @Override
     public void display(GL3 gl) {
         super.display(gl);
-        Shader.setPenColor(gl, Color.MAGENTA);
+        
+        Shader.setInt(gl, "tex", 0);
+        
+        gl.glActiveTexture(GL.GL_TEXTURE0);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, texture.getId());
+        
+        Shader.setPenColor(gl, Color.WHITE);
+       
         CoordFrame3D frame = CoordFrame3D.identity()
                 .translate(0, 0, -2)
                 .scale(0.5f, 0.5f, 0.5f);
-//        drawCube(gl, frame.rotateY(rotationY));
-        
-        cube.draw(gl, frame.rotateY(rotationY));
+        drawCube(gl, frame.rotateY(rotationY));
 
         rotationY += 1;
     }
@@ -73,6 +82,9 @@ public class IndexedCube extends Application3D {
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
         gl.glVertexAttribPointer(Shader.POSITION, 3, GL.GL_FLOAT, false, 0, 0);
         
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
+        
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
         
         Shader.setModelMatrix(gl, frame.getMatrix());
@@ -85,55 +97,67 @@ public class IndexedCube extends Application3D {
         super.init(gl);
         vertexBuffer = new Point3DBuffer(Arrays.asList(
                 new Point3D(-1,-1,1), 
+                new Point3D(-1,1,1),
                 new Point3D(1,-1,1), 
                 new Point3D(1,1,1),
-                new Point3D(-1,1,1),
-                new Point3D(-1,-1,-1), 
                 new Point3D(1,-1,-1), 
                 new Point3D(1,1,-1),
-                new Point3D(-1,1,-1)));
+                new Point3D(-1,-1,-1), 
+                new Point3D(-1,1,-1),
+                new Point3D(-1,-1,1),  //Repeating the starting vertices 
+                new Point3D(-1,1,1))); // as they have their own tex coords 
+        
+        texCoordBuffer = new Point2DBuffer(Arrays.asList(
+                new Point2D(0,0),
+                new Point2D(0,1),
+                new Point2D(0.25f,0),
+                new Point2D(0.25f,1),
+                new Point2D(0.5f,0),
+                new Point2D(0.5f,1),
+                new Point2D(0.75f,0),
+                new Point2D(0.75f,1),
+                new Point2D(1,0),
+                new Point2D(1,1)));
         
         indicesBuffer = GLBuffers.newDirectIntBuffer(new int[] {
-            0,1,2,
-            2,3,0,
-            1,5,6,
-            6,2,1,
-            5,4,7,
-            7,6,5,
-            4,0,3,
-            3,7,4,
-            3,2,6,
-            6,7,3,
-            4,5,1,
-            1,0,4
+            0,2,1,
+            1,2,3,
+            2,4,3,
+            3,4,5,
+            4,6,5,
+            5,6,7,
+            6,8,7,
+            7,8,9,
         });
 
-        int[] names = new int[2];
-        gl.glGenBuffers(2, names, 0);
+        int[] names = new int[3];
+        gl.glGenBuffers(3, names, 0);
         
         verticesName = names[0];
-        indicesName = names[1];
+        texCoordsName = names[1];
+        indicesName = names[2];
         
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
         gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer.capacity() * 3 * Float.BYTES,
                 vertexBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+        
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer.capacity() * 2 * Float.BYTES,
+                texCoordBuffer.getBuffer(), GL.GL_STATIC_DRAW);
        
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
         gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.capacity() * Integer.BYTES,
                 indicesBuffer, GL.GL_STATIC_DRAW);
         
-        try {
-            cube = new TriangleMesh("res/models/cube.ply");
-            cube.init(gl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Shader shader = new Shader(gl, "shaders/vertex_tex_3d.glsl", "shaders/fragment_tex_3d.glsl");
+        shader.use(gl);
+        
+        texture = new Texture(gl, "res/textures/canLabel.bmp", "bmp", false);
     }
     
     @Override
     public void destroy(GL3 gl) {
         super.destroy(gl);
-        gl.glDeleteBuffers(2, new int[] { indicesName, verticesName }, 0);
-        cube.destroy(gl);
+        gl.glDeleteBuffers(3, new int[] { indicesName, verticesName, texCoordsName }, 0);
     }
 }

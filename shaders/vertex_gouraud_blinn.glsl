@@ -1,4 +1,4 @@
-// A shader that performs Gouraud shading
+// A shader that performs Gouraud shading (using Blinn-Phong)
 //
 // Note: This shader assumes there is no non-uniform scale in either the view
 // or the model transform.
@@ -17,16 +17,16 @@ uniform mat4 proj_matrix;
 
 // Light properties
 uniform vec3 lightPos;
-uniform vec3 lightIntensity;
-uniform vec3 ambientIntensity;
+uniform float lightIntensity;
+uniform float ambientIntensity;
 
 // Material properties
-uniform vec3 ambientCoeff;
-uniform vec3 diffuseCoeff;
-uniform vec3 specularCoeff;
+uniform float ambientCoeff;
+uniform float diffuseCoeff;
+uniform float specularCoeff;
 uniform float phongExp;
 
-out vec3 intensity;
+out float intensity;
 
 void main() {
 	// The global position is in homogenous coordinates
@@ -44,17 +44,17 @@ void main() {
     // Compute the s, v and r vectors
     vec3 s = normalize(view_matrix*vec4(lightPos,1) - viewPosition).xyz;
     vec3 v = normalize(-viewPosition.xyz);
-    vec3 r = normalize(reflect(-s,m));
+    vec3 h = (m + s)/2;
 
-    vec3 ambient = ambientIntensity*ambientCoeff;
-    vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(m,s), 0.0);
-    vec3 specular;
+    float ambient = ambientIntensity*ambientCoeff;
+    float diffuse = max(lightIntensity*diffuseCoeff*dot(m,s), 0.0);
+    float specular;
 
     // Only show specular reflections for the front face
     if (dot(m,s) > 0)
-        specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
+        specular = max(lightIntensity*specularCoeff*pow(dot(h,v),phongExp), 0.0);
     else
-        specular = vec3(0.0);
+        specular = 0;
 
     intensity = ambient + diffuse + specular;
 }
