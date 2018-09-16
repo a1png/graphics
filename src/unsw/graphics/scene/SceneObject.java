@@ -266,11 +266,12 @@ public class SceneObject {
      * @param gl
      */
     public void draw(GL3 gl, CoordFrame2D frame) {
-        
+
         // don't draw if it is not showing
         if (!amShowing) {
             return;
         }
+
 
         // TODO: Compute the coordinate frame for this object
         // draw the object (Call drawSelf() to draw the object itself) 
@@ -278,6 +279,7 @@ public class SceneObject {
         CoordFrame2D myFrame = frame.translate(getGlobalPosition())
             .rotate(getGlobalRotation())
             .scale(getGlobalScale(), getGlobalScale());
+
         drawSelf(gl, myFrame);
 
         for(SceneObject child : myChildren) {

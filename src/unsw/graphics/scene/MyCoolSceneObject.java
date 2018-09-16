@@ -1,6 +1,9 @@
 package unsw.graphics.scene;
 
+import com.jogamp.opengl.GL3;
 import java.awt.Color;
+import unsw.graphics.CoordFrame2D;
+import unsw.graphics.Shader;
 import unsw.graphics.geometry.Line2D;
 import unsw.graphics.geometry.Polygon2D;
 
@@ -9,11 +12,12 @@ import unsw.graphics.geometry.Polygon2D;
  *
  */
 public class MyCoolSceneObject extends SceneObject {
+    public PolygonalSceneObject bodyObj;
 
     public MyCoolSceneObject(SceneObject parent) {
         super(parent);
         Polygon2D body = new Polygon2D(0.3f, 0.5f, 0.3f, -0.5f, -0.3f, -0.5f, -0.3f, 0.5f);
-        PolygonalSceneObject bodyObj = new PolygonalSceneObject(parent, body, Color.white, Color.black);
+        bodyObj = new PolygonalSceneObject(this, body, Color.white, Color.black);
         LineSceneObject pantsLine = new LineSceneObject(bodyObj, 0f, -0.2f, 0f, -0.5f, Color.black);
         LineSceneObject belt = new LineSceneObject(bodyObj, -0.3f, 0.1f, 0.3f, 0.1f, Color.black);
 
@@ -27,7 +31,6 @@ public class MyCoolSceneObject extends SceneObject {
         PolygonalSceneObject rightGlassObj = new PolygonalSceneObject(glasses, glass, Color.white, Color.black);
         rightGlassObj.translate(0.3f, 0);
     }
-
 
 
 }
