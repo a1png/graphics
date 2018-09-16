@@ -48,6 +48,7 @@ public class SailingGame extends Application2D {
 
         // attach the camera to the player
         Pirate player = myMap.player();
+        System.out.println(player.getChildren());
         Camera camera = new Camera(new CameraHarness(scene.getRoot(), player));
         camera.scale(20);
         

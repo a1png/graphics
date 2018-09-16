@@ -165,7 +165,6 @@ public class SceneObjectTest extends TestCase {
         Point2D p = obj2.getGlobalPosition();
         float r = obj2.getGlobalRotation();
         float s = obj2.getGlobalScale();
-        
         assertEquals(0, p.getX(), EPSILON);
         assertEquals(0, p.getY(), EPSILON);
         assertEquals(0, r, EPSILON);
@@ -280,7 +279,7 @@ public class SceneObjectTest extends TestCase {
        
         //Change obj3
         obj3.setParent(obj2);
-        
+
         // obj3's global coordinate frame should not be changed
         gp = obj3.getGlobalPosition();
         gr = obj3.getGlobalRotation();

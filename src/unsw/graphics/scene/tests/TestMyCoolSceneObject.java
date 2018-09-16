@@ -38,19 +38,18 @@ public class TestMyCoolSceneObject extends Application2D {
 		
 		//Should look good when we create your MyCoolSceneObject using the default constructor
 		//By default we test on a black background
-		//Write a comment to your tutor in your MyCoolSceneObject file if your object does not look ok on a 
+		//Write a comment to your tutor in your MyCoolSceneObject file if your object does not look ok on a
         //black background and it looks better with a white or a red background
 		
-		MyCoolSceneObject cso = new MyCoolSceneObject(scene.getRoot());
+		MyCoolSceneObject cgo = new MyCoolSceneObject(scene.getRoot());
 		
 		// Should not break if we apply transformations for example
 		// If we uncommented these lines (or wrote other transformations) 
 		// it should not break your object
-		/**
-		cgo.translate(-0.2f,0.2f);
-		cgo.rotate(45);
-		cgo.scale(0.25f);
-		**/    
+//		cgo.translate(-0.2f,0.2f);
+//		cgo.rotate(45);
+//		cgo.scale(0.25f);
+
 	}
    
     /**
