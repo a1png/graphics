@@ -1,12 +1,16 @@
 package unsw.graphics.scene;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.opengl.GL3;
 
 import unsw.graphics.CoordFrame2D;
+import unsw.graphics.Matrix3;
+import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
+import unsw.graphics.scene.MathUtil;
 
 /**
  * A SceneObject is an object that can move around in the world.
@@ -262,16 +266,25 @@ public class SceneObject {
      * @param gl
      */
     public void draw(GL3 gl, CoordFrame2D frame) {
-        
+
         // don't draw if it is not showing
         if (!amShowing) {
             return;
         }
 
+
         // TODO: Compute the coordinate frame for this object
         // draw the object (Call drawSelf() to draw the object itself) 
         // and all its children recursively
-       
+        CoordFrame2D myFrame = frame.translate(getGlobalPosition())
+            .rotate(getGlobalRotation())
+            .scale(getGlobalScale(), getGlobalScale());
+
+        drawSelf(gl, myFrame);
+
+        for(SceneObject child : myChildren) {
+            child.draw(gl, frame);
+        }
         
     }
 
@@ -282,7 +295,24 @@ public class SceneObject {
      */
     public Point2D getGlobalPosition() {
         // TODO: Complete this
-        return null;
+        Point2D globalPos;
+
+        if (myParent != null) {
+            Point2D parentPos = myParent.getGlobalPosition();
+            float parentRot = myParent.getGlobalRotation();
+            float parentScale = myParent.getGlobalScale();
+
+            Matrix3 parentMat = Matrix3.identity().multiply(Matrix3.translation(parentPos))
+                .multiply(Matrix3.rotation(parentRot))
+                .multiply(Matrix3.scale(parentScale, parentScale));
+            Matrix3 myMat = Matrix3.identity().translation(myTranslation);
+            myMat = parentMat.multiply(myMat);
+            globalPos = new Point2D(myMat.getValues()[6], myMat.getValues()[7]);
+        } else {
+            globalPos = new Point2D(myTranslation.getX(), myTranslation.getY());
+        }
+
+        return globalPos;
     }
 
     /**
@@ -293,7 +323,15 @@ public class SceneObject {
      */
     public float getGlobalRotation() {
         // TODO: Complete this
-        return 0;
+        float initRot, globalRot;
+        if (myParent != null) {
+            initRot = myParent.getGlobalRotation();
+        } else {
+            initRot = 0;
+        }
+        globalRot = MathUtil.normaliseAngle(initRot + myRotation);
+
+        return globalRot;
     }
 
     /**
@@ -303,7 +341,14 @@ public class SceneObject {
      */
     public float getGlobalScale() {
         // TODO: Complete this
-        return 1;
+        float initScale, globalScale;
+        if (myParent != null) {
+            initScale = myParent.getGlobalScale();
+        } else {
+            initScale = 1;
+        }
+        globalScale = initScale * myScale;
+        return globalScale;
     }
 
     /**
@@ -315,12 +360,39 @@ public class SceneObject {
         // TODO: add code so that the object does not change its global position, rotation or scale
         // when it is reparented. You may need to add code before and/or after 
         // the fragment of code that has been provided - depending on your approach
-        
+        Point2D parentPos = parent.getGlobalPosition();
+        float parentRot = parent.getGlobalRotation();
+        float parentScale = parent.getGlobalScale();
+
+        float initRot = getGlobalRotation();
+        setRotation(MathUtil.normaliseAngle(initRot - parent.getGlobalRotation()));
+
+        float initScale = getGlobalScale();
+        setScale(initScale / parent.getGlobalScale());
+        Point2D globalPos = getGlobalPosition();
+
+        Matrix3 newMat = Matrix3.identity().multiply(Matrix3.scale(1/parentScale, 1/parentScale))
+            .multiply(Matrix3.rotation(-MathUtil.normaliseAngle(parentRot)))
+            .multiply(Matrix3.translation(-parentPos.getX(), -parentPos.getY()));
+
+        Point2D newPos = newMat.multiply(new Vector3(globalPos.getX(),globalPos.getY(),1)).asPoint2D();
+        setPosition(newPos);
+
         myParent.myChildren.remove(this);
         myParent = parent;
         myParent.myChildren.add(this);
         
     }
-    
+
+    public String objToString(){
+        String str = "";
+
+        str += myTranslation.getX() + " ";
+        str += myTranslation.getY() + " ";
+        str += myRotation + " ";
+        str += myScale + "";
+
+        return str;
+    }
 
 }

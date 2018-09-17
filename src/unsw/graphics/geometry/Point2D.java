@@ -81,9 +81,7 @@ public class Point2D {
      * @param dy
      * @return
      */
-    public Point2D translate(float dx, float dy) {
-        return new Point2D(x + dx, y + dy);
-    }
+    public Point2D translate(float dx, float dy) { return new Point2D(x + dx, y + dy); }
     
     /**
      * Convert this point to a homogenous coordinate (1 for the z value)
