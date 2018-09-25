@@ -5,9 +5,11 @@ package unsw.graphics.world;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jogamp.opengl.GL3;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
-
+import unsw.graphics.geometry.Point3D;
+import unsw.graphics.geometry.TriangleMesh;
 
 
 /**
@@ -23,6 +25,7 @@ public class Terrain {
     private List<Tree> trees;
     private List<Road> roads;
     private Vector3 sunlight;
+    private List<Point3D> grids;
 
     /**
      * Create a new terrain
@@ -37,6 +40,7 @@ public class Terrain {
         trees = new ArrayList<Tree>();
         roads = new ArrayList<Road>();
         this.sunlight = sunlight;
+        genGrids();
     }
 
     public List<Tree> trees() {
@@ -95,10 +99,27 @@ public class Terrain {
      * @return
      */
     public float altitude(float x, float z) {
-        float altitude = 0;
+        float y0, y1, alt_0, alt_1, altitude = 0;
+        int x0, z0, x1, z1, x2, z2;
+        x0 = (int) Math.floor((double) x);
+        z0 = (int) Math.floor((double) z);
+        x1 = (int) Math.ceil((double) x);
+        z1 = (int) Math.ceil((double) z);
+        if (x > z) {
+            x2 = x1;
+            z2 = z0;
+        } else {
+            x2 = x0;
+            z2 = z1;
+        }
 
-        // TODO: Implement this
-        
+
+        y0 = altitudes[x0][z0];
+        y1 = altitudes[x1][z1];
+
+        alt_0 = (x-x0) * y1 + (x1-x) * y0;
+
+
         return altitude;
     }
 
@@ -119,12 +140,37 @@ public class Terrain {
     /**
      * Add a road. 
      * 
-     * @param x
-     * @param z
+     //* @param x
+     //* @param z
      */
     public void addRoad(float width, List<Point2D> spine) {
         Road road = new Road(width, spine);
         roads.add(road);        
+    }
+
+    public void genMesh(GL3 gl) {
+        List<Integer> indices = new ArrayList<>();
+        for (int i=0; i<width-1; i++) {
+            for (int j=0; j<depth-1; j++) {
+                indices.add(i);
+                indices.add(i+1);
+                indices.add(i+1+width);
+
+                indices.add(i);
+                indices.add(i+1+width);
+                indices.add(i+width);
+            }
+        }
+        TriangleMesh segment = new TriangleMesh(grids, indices, true);
+        segment.init(gl);
+    }
+
+    private void genGrids() {
+        for (int x=0; x<width; x++) {
+            for (int z=0; z<depth; z++) {
+                grids.add(new Point3D(x, altitudes[x][z], z));
+            }
+        }
     }
 
 }
