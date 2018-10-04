@@ -97,28 +97,48 @@ public class Terrain {
      * @param x
      * @param z
      * @return
+     *                           p0
+     *                           |\
+     *                           | \
+     *                           |  \
+     *                           |   \
+     * (x-x0) * y2 + (x2-x) * y0 | p  \   (x-x1) * y2 + (x2-x) * y1
+     *                           |     \
+     *                           |      \
+     *                           |       \
+     *                           |        \
+     *                        p2  ---------   p1
      */
     public float altitude(float x, float z) {
-        float y0, y1, alt_0, alt_1, altitude = 0;
+        float y0, y1, y2, inter_y_1, inter_y_2, inter_z_1, inter_z_2, altitude;
         int x0, z0, x1, z1, x2, z2;
         x0 = (int) Math.floor((double) x);
         z0 = (int) Math.floor((double) z);
-        x1 = (int) Math.ceil((double) x);
-        z1 = (int) Math.ceil((double) z);
-        if (x > z) {
-            x2 = x1;
-            z2 = z0;
-        } else {
-            x2 = x0;
-            z2 = z1;
-        }
 
+        if (x > z) {
+            x1 = (int) Math.ceil((double) x);
+            x2 = x1;
+            z1 = z0;
+            z2 = (int) Math.ceil((double) z);
+            inter_z_1 = z0;
+            inter_z_2 = x;
+        } else {
+            x1 = (int) Math.ceil((double) x);
+            x2 = x0;
+            z1 = (int) Math.ceil((double) z);
+            z2 = z1;
+            inter_z_1 = x;
+            inter_z_2 = z1;
+        }
 
         y0 = altitudes[x0][z0];
         y1 = altitudes[x1][z1];
+        y2 = altitudes[x2][z2];
 
-        alt_0 = (x-x0) * y1 + (x1-x) * y0;
+        inter_y_1 = (x-x0) * y1 + (x1-x) * y0;
+        inter_y_2 = (x-x0) * y2 + (x2-x) * y0;
 
+        altitude = (z - inter_z_1) * inter_y_2 + (inter_z_2 - z) * inter_y_1;
 
         return altitude;
     }
