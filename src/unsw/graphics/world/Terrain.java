@@ -3,9 +3,12 @@ package unsw.graphics.world;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.jogamp.opengl.GL3;
+import unsw.graphics.CoordFrame3D;
+import unsw.graphics.Shader;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
@@ -25,7 +28,8 @@ public class Terrain {
     private List<Tree> trees;
     private List<Road> roads;
     private Vector3 sunlight;
-    private List<Point3D> grids;
+    private List<Point3D> grids = new ArrayList<>();
+    private TriangleMesh terrainMesh;
 
     /**
      * Create a new terrain
@@ -40,7 +44,6 @@ public class Terrain {
         trees = new ArrayList<Tree>();
         roads = new ArrayList<Road>();
         this.sunlight = sunlight;
-        genGrids();
     }
 
     public List<Tree> trees() {
@@ -169,28 +172,35 @@ public class Terrain {
     }
 
     public void genMesh(GL3 gl) {
+        genGrids();
         List<Integer> indices = new ArrayList<>();
-        for (int i=0; i<width-1; i++) {
-            for (int j=0; j<depth-1; j++) {
-                indices.add(i);
-                indices.add(i+1);
-                indices.add(i+1+width);
+        for (int i=0; i<depth-1; i++) {
+            for (int j=0; j<width-1; j++) {
+                indices.add(j+width*i);
+                indices.add(j+width*i+1);
+                indices.add(j+width*(i+1)+1);
 
-                indices.add(i);
-                indices.add(i+1+width);
-                indices.add(i+width);
+                indices.add(j+width*i);
+                indices.add(j+width*(i+1)+1);
+                indices.add(j+width*(i+1));
             }
         }
-        TriangleMesh segment = new TriangleMesh(grids, indices, true);
-        segment.init(gl);
+        terrainMesh = new TriangleMesh(grids, indices, true);
+        terrainMesh.init(gl);
     }
 
     private void genGrids() {
-        for (int x=0; x<width; x++) {
-            for (int z=0; z<depth; z++) {
-                grids.add(new Point3D(x, altitudes[x][z], z));
+        Point3D point;
+        for (int z=0; z<depth; z++) {
+            for (int x=0; x<width; x++) {
+                point = new Point3D(x, altitudes[x][z], z);
+                grids.add(point);
             }
         }
+    }
+
+    public void drawSelf(GL3 gl, CoordFrame3D frame) {
+        terrainMesh.draw(gl, frame);
     }
 
 }

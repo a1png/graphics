@@ -120,4 +120,9 @@ public class Point3D {
         return asHomogenous().minus(p.asHomogenous()).trim();
     }
 
+    @Override
+    public String toString() {
+        return String.format("(%f, %f, %f)", getX(), getY(), getZ());
+    }
+
 }

@@ -1,11 +1,13 @@
 package unsw.graphics.world;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 
 import com.jogamp.opengl.GL3;
 
 import unsw.graphics.Application3D;
+import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
 import unsw.graphics.Shader;
 
@@ -40,7 +42,14 @@ public class World extends Application3D {
 
 	@Override
 	public void display(GL3 gl) {
-		super.display(gl);
+    	super.display(gl);
+        CoordFrame3D frame = CoordFrame3D.identity()
+                .translate(-2, 0, -5)
+                .scale(0.3f,0.3f, 0.3f);
+
+		frame.draw(gl);
+        Shader.setPenColor(gl, Color.GRAY);
+		terrain.drawSelf(gl, frame);
 	}
 
 	@Override
@@ -52,8 +61,8 @@ public class World extends Application3D {
 	@Override
 	public void init(GL3 gl) {
 		super.init(gl);
-		
-		
+
+        terrain.genMesh(gl);
 	}
 
 	@Override
