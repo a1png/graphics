@@ -2,13 +2,16 @@ package unsw.graphics.world;
 
 
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Shader;
+import unsw.graphics.Texture;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
@@ -30,6 +33,7 @@ public class Terrain {
     private Vector3 sunlight;
     private List<Point3D> grids = new ArrayList<>();
     private TriangleMesh terrainMesh;
+    private Texture terrainTexture;
 
     /**
      * Create a new terrain
@@ -174,6 +178,7 @@ public class Terrain {
     public void genMesh(GL3 gl) {
         genGrids();
         List<Integer> indices = new ArrayList<>();
+        List<Point2D> texCoords = new ArrayList<>();
         for (int i=0; i<depth-1; i++) {
             for (int j=0; j<width-1; j++) {
                 indices.add(j+width*i);
@@ -185,7 +190,10 @@ public class Terrain {
                 indices.add(j+width*(i+1));
             }
         }
-        terrainMesh = new TriangleMesh(grids, indices, true);
+        texCoords.add(new Point2D(0, 0));
+        texCoords.add(new Point2D(0, 5));
+        texCoords.add(new Point2D(5, 0));
+        terrainMesh = new TriangleMesh(grids, indices, true, texCoords);
         terrainMesh.init(gl);
     }
 
@@ -200,6 +208,9 @@ public class Terrain {
     }
 
     public void drawSelf(GL3 gl, CoordFrame3D frame) {
+        terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", true);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, terrainTexture.getId());
+
         terrainMesh.draw(gl, frame);
     }
 

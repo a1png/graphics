@@ -6,11 +6,7 @@ import java.io.FileNotFoundException;
 
 import com.jogamp.opengl.GL3;
 
-import unsw.graphics.Application3D;
-import unsw.graphics.CoordFrame3D;
-import unsw.graphics.Matrix4;
-import unsw.graphics.Shader;
-
+import unsw.graphics.*;
 
 
 /**
@@ -21,6 +17,7 @@ import unsw.graphics.Shader;
 public class World extends Application3D {
 
     private Terrain terrain;
+    private Shader shader;
 
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -48,7 +45,7 @@ public class World extends Application3D {
                 .scale(0.3f,0.3f, 0.3f);
 
 		frame.draw(gl);
-        Shader.setPenColor(gl, Color.GRAY);
+        Shader.setPenColor(gl, Color.white);
 		terrain.drawSelf(gl, frame);
 	}
 
@@ -61,9 +58,13 @@ public class World extends Application3D {
 	@Override
 	public void init(GL3 gl) {
 		super.init(gl);
+		shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
+                "shaders/fragment_tex_3d.glsl");
+        shader.use(gl);
 
         terrain.genMesh(gl);
-	}
+
+    }
 
 	@Override
 	public void reshape(GL3 gl, int width, int height) {
