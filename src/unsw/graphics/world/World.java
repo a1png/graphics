@@ -3,10 +3,12 @@ package unsw.graphics.world;
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import com.jogamp.opengl.GL3;
 
 import unsw.graphics.*;
+import unsw.graphics.geometry.Point3D;
 
 
 /**
@@ -22,7 +24,6 @@ public class World extends Application3D {
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
         this.terrain = terrain;
-   
     }
    
     /**
@@ -40,13 +41,17 @@ public class World extends Application3D {
 	@Override
 	public void display(GL3 gl) {
     	super.display(gl);
-        CoordFrame3D frame = CoordFrame3D.identity()
-                .translate(-2, 0, -5)
-                .scale(0.3f,0.3f, 0.3f);
+        CoordFrame3D frame = CoordFrame3D.identity();
 
-		frame.draw(gl);
+        CoordFrame3D viewFrame = CoordFrame3D.identity()
+                .translate(-terrain.getGridsWidth()/2, 0, -15)
+                .rotateX(-10);
+        Shader.setViewMatrix(gl, viewFrame.getMatrix());
+
+        frame.draw(gl);
         Shader.setPenColor(gl, Color.white);
-		terrain.drawSelf(gl, frame);
+		terrain.drawTerrain(gl, frame);
+
 	}
 
 	@Override
@@ -62,7 +67,11 @@ public class World extends Application3D {
                 "shaders/fragment_tex_3d.glsl");
         shader.use(gl);
 
-        terrain.genMesh(gl);
+        try {
+            terrain.genMesh(gl);
+        } catch (IOException e) {
+            System.out.println("file not exists");
+        }
 
     }
 

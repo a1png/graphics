@@ -3,6 +3,7 @@ package unsw.graphics.world;
 
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +34,7 @@ public class Terrain {
     private Vector3 sunlight;
     private List<Point3D> grids = new ArrayList<>();
     private TriangleMesh terrainMesh;
+    private TriangleMesh treeMesh;
     private Texture terrainTexture;
 
     /**
@@ -175,7 +177,7 @@ public class Terrain {
         roads.add(road);        
     }
 
-    public void genMesh(GL3 gl) {
+    public void genMesh(GL3 gl) throws IOException{
         genGrids();
         List<Integer> indices = new ArrayList<>();
         List<Point2D> texCoords = new ArrayList<>();
@@ -190,12 +192,21 @@ public class Terrain {
                 indices.add(j+width*(i+1));
             }
         }
-        texCoords.add(new Point2D(0, 0));
-        texCoords.add(new Point2D(0, 5));
-        texCoords.add(new Point2D(5, 0));
+        for (int i=0; i<grids.size()/4; i++) {
+            texCoords.add(new Point2D(0, 0));
+            texCoords.add(new Point2D(0, 1));
+            texCoords.add(new Point2D(1, 1));
+            texCoords.add(new Point2D(1, 0));
+        }
+
         terrainMesh = new TriangleMesh(grids, indices, true, texCoords);
+        treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
+
         terrainMesh.init(gl);
+        treeMesh.init(gl);
+
     }
+
 
     private void genGrids() {
         Point3D point;
@@ -207,8 +218,12 @@ public class Terrain {
         }
     }
 
-    public void drawSelf(GL3 gl, CoordFrame3D frame) {
-        terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", true);
+    public int getGridsWidth() { return this.width; }
+
+    public void drawTerrain(GL3 gl, CoordFrame3D frame) {
+        // terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", false);
+        terrainTexture = new Texture(gl, "res/textures/BrightPurpleMarble.png", "png", false);
+
         gl.glBindTexture(GL.GL_TEXTURE_2D, terrainTexture.getId());
 
         terrainMesh.draw(gl, frame);
