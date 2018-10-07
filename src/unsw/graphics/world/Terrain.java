@@ -36,6 +36,7 @@ public class Terrain {
     private TriangleMesh terrainMesh;
     private TriangleMesh treeMesh;
     private Texture terrainTexture;
+    private float rotateY = 0;
 
     /**
      * Create a new terrain
@@ -123,20 +124,19 @@ public class Terrain {
         int x0, z0, x1, z1, x2, z2;
         x0 = (int) Math.floor((double) x);
         z0 = (int) Math.floor((double) z);
-
         if (x > z) {
             x1 = (int) Math.ceil((double) x);
             x2 = x1;
             z1 = z0;
             z2 = (int) Math.ceil((double) z);
             inter_z_1 = z0;
-            inter_z_2 = x;
+            inter_z_2 = z0 + x % 1;
         } else {
             x1 = (int) Math.ceil((double) x);
             x2 = x0;
             z1 = (int) Math.ceil((double) z);
             z2 = z1;
-            inter_z_1 = x;
+            inter_z_1 = z0 + x % 1;
             inter_z_2 = z1;
         }
 
@@ -145,10 +145,10 @@ public class Terrain {
         y2 = altitudes[x2][z2];
 
         inter_y_1 = (x-x0) * y1 + (x1-x) * y0;
-        inter_y_2 = (x-x0) * y2 + (x2-x) * y0;
+        inter_y_2 = (x-x2) * y1 + (x1-x) * y2;
 
-        altitude = (z - inter_z_1) * inter_y_2 + (inter_z_2 - z) * inter_y_1;
-
+        altitude = (z - inter_z_1) / (inter_z_2-inter_z_1) * inter_y_2 +
+                (inter_z_2 - z) / (inter_z_2-inter_z_1) * inter_y_1;
         return altitude;
     }
 
@@ -184,12 +184,13 @@ public class Terrain {
         for (int i=0; i<depth-1; i++) {
             for (int j=0; j<width-1; j++) {
                 indices.add(j+width*i);
-                indices.add(j+width*i+1);
                 indices.add(j+width*(i+1)+1);
+                indices.add(j+width*i+1);
 
                 indices.add(j+width*i);
-                indices.add(j+width*(i+1)+1);
                 indices.add(j+width*(i+1));
+                indices.add(j+width*(i+1)+1);
+
             }
         }
         for (int i=0; i<grids.size()/4; i++) {
@@ -204,6 +205,9 @@ public class Terrain {
 
         terrainMesh.init(gl);
         treeMesh.init(gl);
+
+        terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", false);
+        // terrainTexture = new Texture(gl, "res/textures/BrightPurpleMarble.png", "png", false);
 
     }
 
@@ -220,13 +224,30 @@ public class Terrain {
 
     public int getGridsWidth() { return this.width; }
 
-    public void drawTerrain(GL3 gl, CoordFrame3D frame) {
-        // terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", false);
-        terrainTexture = new Texture(gl, "res/textures/BrightPurpleMarble.png", "png", false);
+    public int getGridsDepth() { return this.depth; }
 
+    public void drawTerrain(GL3 gl, CoordFrame3D frame) {
+        Shader.setInt(gl, "tex", 0);
+        gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, terrainTexture.getId());
 
-        terrainMesh.draw(gl, frame);
+        CoordFrame3D terrainFrame = frame
+                .translate(0, 0, 0);//.rotateX(rotateY);
+
+        terrainMesh.draw(gl, terrainFrame);
+        // terrainFrame.draw(gl);
+
+        Shader.setPenColor(gl, Color.BLACK);
+        for(Tree tree : trees) {
+            CoordFrame3D treeFrame = terrainFrame.
+                    translate(tree.getPosition()).translate(0,2,0).scale(0.4f, 0.4f, 0.4f);
+            // System.out.println(treeFrame.getMatrix());
+            // treeFrame.draw(gl);
+            treeMesh.draw(gl, treeFrame);
+        }
+
+        rotateY += 0.3;
     }
+
 
 }
