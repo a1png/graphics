@@ -26,7 +26,7 @@ in vec2 texCoordFrag;
 void main()
 {
     // Compute the s, v and r vectors
-    vec3 s = normalize(vec4(lightVec, 1)).xyz;
+    vec3 s = normalize(vec4(lightVec, 0)).xyz;
     vec3 v = normalize(-viewPosition.xyz);
     vec3 r = normalize(reflect(-s,m));
 

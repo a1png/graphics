@@ -193,11 +193,16 @@ public class Terrain {
 
             }
         }
-        for (int i=0; i<grids.size()/4; i++) {
-            texCoords.add(new Point2D(0, 0));
-            texCoords.add(new Point2D(0, 1));
-            texCoords.add(new Point2D(1, 1));
-            texCoords.add(new Point2D(1, 0));
+        for (int i=0; i<width; i++) {
+            for (int j=0; j<depth/2; j++){
+                if (i%2==0) {
+                    texCoords.add(new Point2D(0, 1));
+                    texCoords.add(new Point2D(0, 0));
+                } else {
+                    texCoords.add(new Point2D(1, 1));
+                    texCoords.add(new Point2D(1, 0));
+                }
+            }
         }
 
         terrainMesh = new TriangleMesh(grids, indices, true, texCoords);

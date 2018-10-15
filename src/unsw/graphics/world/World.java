@@ -68,7 +68,7 @@ public class World extends Application3D implements KeyListener {
         // Set the material properties
         Shader.setColor(gl, "ambientCoeff", Color.WHITE);
         Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
-        Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
+        Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
         Shader.setFloat(gl, "phongExp", 16f);
 
         // frame.draw(gl);
