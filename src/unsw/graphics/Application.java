@@ -39,6 +39,8 @@ public abstract class Application implements GLEventListener {
 
     private int height;
 
+    private FPSAnimator animator;
+
     /**
      * Construct an Application. The window for the application will have the
      * given title, width, and height.
@@ -72,6 +74,9 @@ public abstract class Application implements GLEventListener {
         // The capabilities are what OpenGL features the hardware is capable of
         // using
         GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+        
+        glCapabilities.setNumSamples(8);
+        glCapabilities.setSampleBuffers(true);
 
         // Use newt to create a window with an OpenGL canvas
         window = GLWindow.create(glCapabilities);
@@ -91,7 +96,7 @@ public abstract class Application implements GLEventListener {
 
         // Create an animator. The animator will tell the window to redraw
         // itself 60 times a second.
-        FPSAnimator animator = new FPSAnimator(window, 60);
+        animator = new FPSAnimator(window, 60);
 
         // THis is just to make sure everything shuts down properly when the
         // window is closed.
@@ -200,5 +205,10 @@ public abstract class Application implements GLEventListener {
      * @return
      */
     public abstract Shader getDefaultShader();
+    
+
+    public FPSAnimator getAnimator() {
+        return animator;
+    }
 
 }
