@@ -23,19 +23,31 @@ public class World extends Application3D implements KeyListener {
 
     private Terrain terrain;
     private Shader shader;
+    private Avatar avatar;
+    private float viewDis;
     private float cameraPosX = 0;
     private float cameraPosY = 0;
     private float cameraPosZ = 0;
-    private float cameraDis = 5;
-    private float viewPointX;
-    private float viewPointZ;
+    private float cameraRotateX = 0;
+    private float cameraRotateY = 0;
+    private float cameraRotateZ = 0;
+    private float avatarPosX, avatarPosY, avatarPosZ;
+    private int cameraStatus = 0; // 0: first person; 1: third person
     private float rotateY = 0;
+    private double rotateYRad;
+    private int daytime = 0; // 0: day; 1:night
+    private Color dayLight = new Color(0.5f, 0.5f, 0.5f);
+    private Color nightLight = new Color(0.01f, 0.01f, 0.01f);
+    private Color lightColor = dayLight;
+
 
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
         this.terrain = terrain;
-        viewPointX = 0;
-        viewPointZ = terrain.getGridsDepth();
+        this.avatar = new Avatar();
+        avatarPosZ = terrain.getGridsDepth()-1;
+//        viewPointX = 0;
+//        viewPointZ = terrain.getGridsDepth();
     }
    
     /**
@@ -54,16 +66,26 @@ public class World extends Application3D implements KeyListener {
 	public void display(GL3 gl) {
     	super.display(gl);
         CoordFrame3D frame = CoordFrame3D.identity();
+        CoordFrame3D viewFrame;
 
-        CoordFrame3D viewFrame = frame
+        viewDis = terrain.getGridsDepth()+2;
+        viewFrame = frame
+                .translate(0,0, -viewDis)
+                .rotateX(cameraRotateX)
                 .rotateY(rotateY)
-                .translate(cameraPosX, -2 - cameraPosY, -cameraDis+cameraPosZ)
+                .translate(-avatarPosX, -2 - avatarPosY, -avatarPosZ)
                 ;
-        Shader.setViewMatrix(gl, viewFrame.getMatrix());
 
-        Shader.setPoint3D(gl, "lightVec", terrain.getSunlight().asPoint3D());
+        Point3D torchDir = new Vector3((float) (1*Math.sin(rotateYRad)), 0 ,(float) (1*Math.cos(rotateYRad))).asPoint3D();
+        //viewFrame.draw(gl);
+        Shader.setViewMatrix(gl, viewFrame.getMatrix());
+        Shader.setInt(gl, "lightType", daytime);
+        Shader.setPoint3D(gl, "torchPos", new Point3D(avatarPosX, avatarPosY, avatarPosZ));
+        Shader.setPoint3D(gl, "torchDir", torchDir);
+        Shader.setPoint3D(gl, "lightVec", terrain.getSunlight().extend().asPoint3D());
         Shader.setColor(gl, "lightIntensity", Color.WHITE);
-        Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
+        Shader.setColor(gl, "ambientIntensity", lightColor);
+        Shader.setColor(gl, "torchIntensity", new Color(0.5f, 0.5f, 0.5f));
 
         // Set the material properties
         Shader.setColor(gl, "ambientCoeff", Color.WHITE);
@@ -74,6 +96,18 @@ public class World extends Application3D implements KeyListener {
         // frame.draw(gl);
         Shader.setPenColor(gl, Color.white);
 		terrain.drawTerrain(gl, frame);
+
+        Shader.setPenColor(gl, Color.white);
+        if (cameraStatus==1) {
+            //CoordFrame3D avatarFrame = frame.translate(-cameraPosX, cameraPosY, terrain.getGridsDepth()-cameraPosZ)
+            CoordFrame3D avatarFrame = frame
+                    .translate(avatarPosX, avatarPosY, avatarPosZ)
+                    .rotateY(180)
+                    .scale(5,5,5)
+                    ;
+            avatar.drawAvatar(gl, avatarFrame);
+            //avatarFrame.draw(gl);
+        }
 	}
 
 	@Override
@@ -87,17 +121,14 @@ public class World extends Application3D implements KeyListener {
 		super.init(gl);
         getWindow().addKeyListener(this);
 
-		shader = new Shader(gl, "shaders/vertex_tex_phong.glsl",
+        shader = new Shader(gl, "shaders/vertex_tex_phong.glsl",
                 //"shaders/fragment_tex_phong.glsl");
                         "shaders/fragment_tex_phong_directional.glsl");
         shader.use(gl);
-        cameraDis = terrain.getGridsDepth()+5;
-//        viewPointX = 0;
-//        viewPointZ = terrain.getGridsDepth()-1;
-//        cameraPosY = terrain.altitude(viewPointX, viewPointZ);
 
         try {
             terrain.genMesh(gl);
+            avatar.init(gl);
         } catch (IOException e) {
             System.out.println("PLY file not exists");
         }
@@ -112,42 +143,60 @@ public class World extends Application3D implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        double rotateYRad = Math.toRadians(rotateY);
+        rotateYRad = Math.toRadians(rotateY);
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
-                cameraPosX -= 0.4 * Math.sin(rotateYRad);
-                cameraPosZ += 0.4 * Math.cos(rotateYRad);
-                viewPointX += 0.4 * Math.sin(rotateYRad);
-                viewPointZ -= 0.4 * Math.cos(rotateYRad);
-                break;
-            case KeyEvent.VK_DOWN:
                 cameraPosX += 0.4 * Math.sin(rotateYRad);
                 cameraPosZ -= 0.4 * Math.cos(rotateYRad);
-                viewPointX -= 0.4 * Math.sin(rotateYRad);
-                viewPointZ += 0.4 * Math.cos(rotateYRad);
+                avatarPosX += 0.4 * Math.sin(rotateYRad);
+                avatarPosZ -= 0.4 * Math.cos(rotateYRad);
+                break;
+            case KeyEvent.VK_DOWN:
+                cameraPosX -= 0.4 * Math.sin(rotateYRad);
+                cameraPosZ += 0.4 * Math.cos(rotateYRad);
+                avatarPosX -= 0.4 * Math.sin(rotateYRad);
+                avatarPosZ += 0.4 * Math.cos(rotateYRad);
                 break;
             case KeyEvent.VK_LEFT:
                 rotateY = MathUtil.normaliseAngle(rotateY - 5);
                 rotateYRad = Math.toRadians(rotateY);
-                viewPointX -= cameraDis * Math.sin(rotateYRad);
-                viewPointZ -= cameraDis * (1-Math.cos(rotateYRad));
+                //avatarPosX -= 3 * Math.sin(rotateYRad);
+                //avatarPosZ -= 3 * (1 - Math.cos(rotateYRad));
+
                 break;
             case KeyEvent.VK_RIGHT:
                 rotateY = MathUtil.normaliseAngle(rotateY + 5);
                 rotateYRad = Math.toRadians(rotateY);
-                viewPointX += cameraDis * Math.sin(rotateYRad);
-                viewPointZ -= cameraDis * (1-Math.cos(rotateYRad));
+                //avatarPosX += (3) * Math.sin(rotateYRad);
+                //avatarPosZ -= (3) * (1-Math.cos(rotateYRad));
+                break;
+            case KeyEvent.VK_SPACE:
+                if (cameraStatus==0) {
+                    cameraStatus = 1;
+                    cameraRotateX = 20;
+                } else if (cameraStatus==1) {
+                    cameraStatus = 0;
+                    cameraRotateX = 0;
+                }
+                break;
+            case KeyEvent.VK_C:
+                if (daytime == 0) {
+                    daytime = 1;
+                    lightColor = nightLight;
+                } else {
+                    daytime = 0;
+                    lightColor = dayLight;
+                }
                 break;
             default:
                 break;
         }
-//        if (0 <= viewPointX && viewPointX < terrain.getGridsWidth() - 1
-//                && 0 <= viewPointZ && viewPointZ < terrain.getGridsDepth() - 1) {
-//            cameraPosY = terrain.altitude(viewPointX, viewPointZ);
-//        } else {
-//            cameraPosY = 0;
-//        }
-//        System.out.println(String.format("%f, %f, %f, %f, %f, %f", cameraPosX, cameraPosY, cameraPosZ, viewPointX, viewPointZ, rotateY));
+        if (0 <= avatarPosX && avatarPosX <= terrain.getGridsWidth() - 1
+                && 0 <= avatarPosZ && avatarPosZ <= terrain.getGridsDepth() - 1) {
+            avatarPosY = terrain.altitude(avatarPosX, avatarPosZ);
+        } else {
+            avatarPosY = 0;
+        }
 
     }
 

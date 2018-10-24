@@ -36,6 +36,7 @@ public class Terrain {
     private TriangleMesh terrainMesh;
     private TriangleMesh treeMesh;
     private Texture terrainTexture;
+    private Texture treeTexture;
     private float rotateY = 0;
 
     /**
@@ -124,7 +125,18 @@ public class Terrain {
         int x0, z0, x1, z1, x2, z2;
         x0 = (int) Math.floor((double) x);
         z0 = (int) Math.floor((double) z);
-        if (x > z) {
+        if (x0==x && z0==z) {
+            return (float) getGridAltitude((int) x, (int) z);
+        }
+        if (x==x0) {
+            altitude = (float) (getGridAltitude(x0, z0) + (getGridAltitude(x0, z0+1) - getGridAltitude(x0, z0)) * (z-z0));
+            return altitude;
+        } else if (z==z0) {
+            altitude = (float) (getGridAltitude(x0, z0) + (getGridAltitude(x0+1, z0) - getGridAltitude(x0, z0)) * (x-x0));
+            return altitude;
+        }
+
+        if ((x-x0) > (z-z0)) {
             x1 = (int) Math.ceil((double) x);
             x2 = x1;
             z1 = z0;
@@ -145,7 +157,7 @@ public class Terrain {
         y2 = altitudes[x2][z2];
 
         inter_y_1 = (x-x0) * y1 + (x1-x) * y0;
-        inter_y_2 = (x-x2) * y1 + (x1-x) * y2;
+        inter_y_2 = (x-x0) * y1 + (x1-x) * y2;
 
         altitude = (z - inter_z_1) / (inter_z_2-inter_z_1) * inter_y_2 +
                 (inter_z_2 - z) / (inter_z_2-inter_z_1) * inter_y_1;
@@ -173,7 +185,9 @@ public class Terrain {
      //* @param z
      */
     public void addRoad(float width, List<Point2D> spine) {
-        Road road = new Road(width, spine);
+        Point2D start = spine.get(0);
+        float roadHeight = altitude(start.getX(), start.getY()) + 0.01f;
+        Road road = new Road(width, spine, roadHeight);
         roads.add(road);        
     }
 
@@ -207,12 +221,15 @@ public class Terrain {
 
         terrainMesh = new TriangleMesh(grids, indices, true, texCoords);
         treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
+        for (Road road : roads) {
+            road.genMesh(gl);
+        }
 
         terrainMesh.init(gl);
         treeMesh.init(gl);
 
         terrainTexture = new Texture(gl, "res/textures/grass.bmp", "bmp", false);
-        // terrainTexture = new Texture(gl, "res/textures/BrightPurpleMarble.png", "png", false);
+        treeTexture = new Texture(gl, "res/textures/BrightPurpleMarble.png", "png", false);
 
     }
 
@@ -240,9 +257,13 @@ public class Terrain {
                 .translate(0, 0, 0);//.rotateX(rotateY);
 
         terrainMesh.draw(gl, terrainFrame);
-        // terrainFrame.draw(gl);
 
-        Shader.setPenColor(gl, Color.BLACK);
+        for (Road road : roads) {
+            road.drawRoad(gl, terrainFrame);
+        }
+
+        gl.glBindTexture(GL.GL_TEXTURE_2D, treeTexture.getId());
+
         for(Tree tree : trees) {
             CoordFrame3D treeFrame = terrainFrame.
                     translate(tree.getPosition()).translate(0,2,0).scale(0.4f, 0.4f, 0.4f);
