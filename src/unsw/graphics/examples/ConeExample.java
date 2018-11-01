@@ -60,12 +60,12 @@ public class ConeExample extends Application3D implements MouseListener{
         Shader shader = new Shader(gl, "shaders/vertex_phong.glsl",
                 "shaders/fragment_phong.glsl");
         shader.use(gl);
-        
+
         // Set the lighting properties
         Shader.setPoint3D(gl, "lightPos", new Point3D(0, 0, 5));
         Shader.setColor(gl, "lightIntensity", Color.WHITE);
         Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
-        
+
         // Set the material properties
         Shader.setColor(gl, "ambientCoeff", Color.WHITE);
         Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
@@ -108,24 +108,24 @@ public class ConeExample extends Application3D implements MouseListener{
         for (int i = 0; i < NUM_SLICES; i++) {
         	float t = i*tIncrement;
         	vertices.add(new Point3D(0, 0, height));
-        
+
         	float x = getX(t);
             float y = getY(t);
-            
+
             normals.add(new Vector3(x, y, radius/height));
         }
-        
+
         
         for(int i = 0; i < NUM_SLICES; i++) {
            float t = i*tIncrement;
-           
+
            float x = getX(t);
            float y = getY(t);
- 	   	  
+
            vertices.add(new Point3D(getX(t), getY(t), 0));
-           
+
            normals.add(new Vector3(x, y, radius/height));
-           
+
            indices.add(i+NUM_SLICES);
            indices.add((i+1) % NUM_SLICES + NUM_SLICES);
            indices.add(i);
